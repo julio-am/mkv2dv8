@@ -113,32 +113,37 @@ add_audio_stream () {
     eac3)
       ext="eac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
       echo "   - stream $aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
+      $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+        -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     ac3)
       ext="ac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
       echo "   - stream $aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
+      $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+        -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     truehd)
-      # Extract embedded AC-3 core (no re-encode). If core missing, transcode to E-AC-3.
       ext="ac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
       echo "   - stream $aindex (truehd) -> $af (extract AC-3 core)"
-      if ! $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy -bsf:a truehd_core "$af"; then
+      if ! $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+           -i "$INPUT" -map 0:"$aindex" -c copy -bsf:a truehd_core "$af"; then
         af="$TMP/${BASENAME}.a${idx}.eac3"
-        echo "     ! core missing; transcoding to E-AC-3 640k -> $af"
-        $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 640k "$af"
+        echo "     ! core missing; transcoding to E-AC-3 768k -> $af"
+        $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+          -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 768k "$af"
       fi
       ;;
     aac|aac_latm|mp4a|alac)
       ext="m4a"; af="$TMP/${BASENAME}.a${idx}.${ext}"
       echo "   - stream $aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
+      $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+        -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     dts|dca|dts_hd|dts_ma|flac)
       af="$TMP/${BASENAME}.a${idx}.eac3"
       echo "   - stream $aindex ($acodec) -> $af (transcode to E-AC-3 640k)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 640k "$af"
+      $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+        -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 640k "$af"
       ;;
     *)
       echo "   - Skipping stream $aindex ($acodec) – not suitable for MP4"
@@ -167,7 +172,7 @@ for f in "${AUDIO_FILES[@]}"; do
 done
 MP4_ARGS+=( -brand mp42isom -ab dby1 -new "$OUT" )
 
-MP4Box "${MP4_ARGS[@]}"
+MP4Box "${MP4_ARGS[@]}" </dev/null
 
 echo "==> Ensuring video tag is hvc1..."
 $NICE ffmpeg -hide_banner -loglevel error -i "$OUT" -map 0 -c copy -tag:v hvc1 "$OUT.tmp.mp4"
