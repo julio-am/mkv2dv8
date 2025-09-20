@@ -111,52 +111,37 @@ add_audio_stream () {
   local aindex="$1" acodec="$2" af ext
   case "$acodec" in
     eac3)
-      ext="eac3"
-      af="$TMP/${BASENAME}.a${idx}.${ext}"
-      echo "   - a:$aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+      ext="eac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - stream $aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     ac3)
-      ext="ac3"
-      af="$TMP/${BASENAME}.a${idx}.${ext}"
-      echo "   - a:$aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+      ext="ac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - stream $aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     truehd)
-      # Extract embedded AC-3 core (no re-encode) – best for MP4Box
-      ext="ac3"
-      af="$TMP/${BASENAME}.a${idx}.${ext}"
-      echo "   - a:$aindex (truehd) -> $af (extract AC-3 core)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
-        -c copy -bsf:a truehd_core "$af" || {
-          echo "     ! core extract failed; transcoding to E-AC-3 640k"
-          af="$TMP/${BASENAME}.a${idx}.eac3"
-          $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
-            -c:a eac3 -b:a 640k "$af"
-        }
+      # Extract embedded AC-3 core (no re-encode). If core missing, transcode to E-AC-3.
+      ext="ac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - stream $aindex (truehd) -> $af (extract AC-3 core)"
+      if ! $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy -bsf:a truehd_core "$af"; then
+        af="$TMP/${BASENAME}.a${idx}.eac3"
+        echo "     ! core missing; transcoding to E-AC-3 640k -> $af"
+        $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 640k "$af"
+      fi
       ;;
-    aac|aac_latm|mp4a)
-      ext="m4a"
-      af="$TMP/${BASENAME}.a${idx}.${ext}"
-      echo "   - a:$aindex ($acodec) -> $af (copy)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+    aac|aac_latm|mp4a|alac)
+      ext="m4a"; af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - stream $aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
-    dts|dca|dts_hd|dts_ma)
-      # DTS is not MP4-friendly – transcode to E-AC-3
+    dts|dca|dts_hd|dts_ma|flac)
       af="$TMP/${BASENAME}.a${idx}.eac3"
-      echo "   - a:$aindex ($acodec) -> $af (transcode to E-AC-3 640k)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
-        -c:a eac3 -b:a 640k "$af"
-      ;;
-    flac)
-      # FLAC isn’t supported by MP4Box – either transcode to E-AC-3 or skip
-      af="$TMP/${BASENAME}.a${idx}.eac3"
-      echo "   - a:$aindex (flac) -> $af (transcode to E-AC-3 640k)"
-      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
-        -c:a eac3 -b:a 640k "$af"
+      echo "   - stream $aindex ($acodec) -> $af (transcode to E-AC-3 640k)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 640k "$af"
       ;;
     *)
-      echo "   - Skipping a:$aindex ($acodec) – not suitable for MP4"
+      echo "   - Skipping stream $aindex ($acodec) – not suitable for MP4"
       return
       ;;
   esac
