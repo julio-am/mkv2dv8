@@ -102,46 +102,91 @@ echo "==> Starting producer (BL → inject RPU → FIFO)..."
 # =========================
 # Step 3: Extract MP4-friendly audio tracks to small temp files
 # =========================
-echo "==> Extracting audio tracks (copy) to temp..."
+echo "==> Extracting audio tracks (MP4-friendly) to temp..."
 AUDIO_FILES=()
 idx=0
-# Enumerate audio streams with index and codec
-while IFS=, read -r aindex acodec; do
-  # Keep only codecs that MP4Box can add cleanly: eac3, ac3, aac
+
+# helper: add one audio stream by index with codec-aware handling
+add_audio_stream () {
+  local aindex="$1" acodec="$2" af ext
   case "$acodec" in
-    eac3) ext="eac3" ;;
-    ac3)  ext="ac3"  ;;
-    aac|aac_latm|mp4a|alac) ext="m4a" ;;  # ALAC can be wrapped, but rare on discs
-    *)    echo "   - Skipping audio a:$aindex ($acodec) – not MP4-friendly"; continue ;;
+    eac3)
+      ext="eac3"
+      af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - a:$aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+      ;;
+    ac3)
+      ext="ac3"
+      af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - a:$aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+      ;;
+    truehd)
+      # Extract embedded AC-3 core (no re-encode) – best for MP4Box
+      ext="ac3"
+      af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - a:$aindex (truehd) -> $af (extract AC-3 core)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
+        -c copy -bsf:a truehd_core "$af" || {
+          echo "     ! core extract failed; transcoding to E-AC-3 640k"
+          af="$TMP/${BASENAME}.a${idx}.eac3"
+          $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
+            -c:a eac3 -b:a 640k "$af"
+        }
+      ;;
+    aac|aac_latm|mp4a)
+      ext="m4a"
+      af="$TMP/${BASENAME}.a${idx}.${ext}"
+      echo "   - a:$aindex ($acodec) -> $af (copy)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
+      ;;
+    dts|dca|dts_hd|dts_ma)
+      # DTS is not MP4-friendly – transcode to E-AC-3
+      af="$TMP/${BASENAME}.a${idx}.eac3"
+      echo "   - a:$aindex ($acodec) -> $af (transcode to E-AC-3 640k)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
+        -c:a eac3 -b:a 640k "$af"
+      ;;
+    flac)
+      # FLAC isn’t supported by MP4Box – either transcode to E-AC-3 or skip
+      af="$TMP/${BASENAME}.a${idx}.eac3"
+      echo "   - a:$aindex (flac) -> $af (transcode to E-AC-3 640k)"
+      $NICE ffmpeg -hide_banner -loglevel error -i "$INPUT" -map 0:a:"$aindex" \
+        -c:a eac3 -b:a 640k "$af"
+      ;;
+    *)
+      echo "   - Skipping a:$aindex ($acodec) – not suitable for MP4"
+      return
+      ;;
   esac
-  af="$TMP/${BASENAME}.a${idx}.${ext}"
-  echo "   - a:$aindex ($acodec) -> $af"
-  $NICE ffmpeg -hide_banner -loglevel error \
-    -i "$INPUT" -map 0:a:"$aindex" -c copy "$af"
   AUDIO_FILES+=("$af")
   ((idx++))
+}
+
+# enumerate audio streams and add them
+while IFS=, read -r aindex acodec; do
+  add_audio_stream "$aindex" "$acodec"
 done < <(ffprobe -v error -select_streams a -show_entries stream=index,codec_name -of csv=p=0 "$INPUT")
 
-if [[ ${#AUDIO_FILES[@]} -eq 0 ]]; then
-  echo "   (No MP4-friendly audio streams found; video-only MP4 will be created.)"
-fi
+[[ ${#AUDIO_FILES[@]} -eq 0 ]] && echo "   (No MP4-friendly audio found; video-only MP4 will be created.)"
 
-# =========================
-# Step 4: Mux to MP4 from FIFO (no giant .hevc files)
-# =========================
+# ---------- FIXED MP4Box mux (properly quoted args) ----------
 echo "==> Muxing to MP4 (dv-profile=8) from FIFO..."
-# :fmt=hevc tells MP4Box the FIFO carries raw HEVC Annex B
-MP4Box -quiet -tmp "$TMP" \
-  -add "$FIFO:dv-profile=8:fmt=hevc:name=Video" \
-  $(for f in "${AUDIO_FILES[@]}"; do printf -- ' -add "%s"'; done) \
-  -brand mp42isom -ab dby1 \
-  -new "$OUT"
+MP4_ARGS=( -quiet -tmp "$TMP" )
+# video from FIFO
+MP4_ARGS+=( -add "$FIFO:dv-profile=8:fmt=hevc:name=Video" )
+# each audio file
+for f in "${AUDIO_FILES[@]}"; do
+  MP4_ARGS+=( -add "$f" )
+done
+MP4_ARGS+=( -brand mp42isom -ab dby1 -new "$OUT" )
 
-# Some players are picky; ensure hvc1 tag via stream-copy remux
+MP4Box "${MP4_ARGS[@]}"
+
 echo "==> Ensuring video tag is hvc1..."
 $NICE ffmpeg -hide_banner -loglevel error -i "$OUT" -map 0 -c copy -tag:v hvc1 "$OUT.tmp.mp4"
 mv -f "$OUT.tmp.mp4" "$OUT"
-
 # =========================
 # Step 5: Optional source removal
 # =========================
