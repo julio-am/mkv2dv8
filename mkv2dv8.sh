@@ -121,16 +121,11 @@ add_audio_stream () {
         -i "$INPUT" -map 0:"$aindex" -c copy "$af"
       ;;
     truehd)
-      # Try AC-3 core first; if none embedded, transcode to E-AC-3 768k
-      ext="ac3"; af="$TMP/${BASENAME}.a${idx}.${ext}"
-      echo "   - stream $aindex (truehd) -> $af (extract AC-3 core)"
-      if ! $NICE ffmpeg -nostdin -hide_banner -loglevel error \
-           -i "$INPUT" -map 0:"$aindex" -c copy -bsf:a truehd_core "$af"; then
-        af="$TMP/${BASENAME}.a${idx}.eac3"
-        echo "     ! core missing; transcoding to E-AC-3 768k -> $af"
-        $NICE ffmpeg -nostdin -hide_banner -loglevel error \
-          -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 768k "$af"
-      fi
+      # Always transcode TrueHD to E-AC-3 to avoid core-extract DTS issues in MKV
+      af="$TMP/${BASENAME}.a${idx}.eac3"
+      echo "   - stream $aindex (truehd) -> $af (transcode to E-AC-3 768k)"
+      $NICE ffmpeg -nostdin -hide_banner -loglevel error \
+        -i "$INPUT" -map 0:"$aindex" -c:a eac3 -b:a 768k "$af"
       ;;
     aac|aac_latm|mp4a|alac)
       ext="m4a"; af="$TMP/${BASENAME}.a${idx}.${ext}"
