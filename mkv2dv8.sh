@@ -51,7 +51,7 @@ JOBTMP="$(mktemp -d "$TMPROOT/${BASENAME}.XXXX")"
 trap '[[ "${KEEP_TEMP:-no}" == "yes" ]] || rm -rf "$JOBTMP"' EXIT
 
 LOGFILE="$LOGROOT/${BASENAME}_$(date +%Y%m%d_%H%M%S).log"
-exec > >(tee -a "$LOGFILE") 2>&1
+exec >>"$LOGFILE" 2>&1
 
 TMP="$JOBTMP"
 OUTDIR="$OUTROOT"
