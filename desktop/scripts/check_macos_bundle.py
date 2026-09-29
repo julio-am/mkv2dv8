@@ -15,7 +15,7 @@ def main():
     if sys.platform != "darwin":
         raise SystemExit("This check must run on macOS.")
     executable = args.app / "Contents/MacOS/MKVProfileConverter"
-    subprocess.run(["lipo", "-verify_arch", platform.machine(), str(executable)], check=True)
+    subprocess.run(["lipo", str(executable), "-verify_arch", platform.machine()], check=True)
     subprocess.run(["codesign", "--verify", "--deep", "--strict", str(args.app)], check=True)
     env = os.environ.copy()
     env.pop("QT_QPA_PLATFORM", None)
