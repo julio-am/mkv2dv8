@@ -37,6 +37,14 @@ def version_tuple(text: str) -> tuple[int, ...]:
     return tuple(int(x or 0) for x in match.groups()) if match else ()
 
 
+def bundled_tool_dirs() -> list[Path]:
+    """PyInstaller keeps executables under _MEIPASS, including macOS bundles."""
+    if not getattr(sys, "frozen", False):
+        return []
+    root = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+    return [root / "media-tools", Path(sys.executable).parent / "tools"]
+
+
 def candidate_dirs() -> list[Path]:
     app_root = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
     dirs = [app_root / "tools", Path.home() / ".local/bin", Path.home() / ".cargo/bin"]
@@ -63,7 +71,11 @@ def discover(overrides: dict[str, str] | None = None) -> dict[str, Tool]:
     for name, (minimum, _) in SPECS.items():
         configured = overrides.get(name, "").strip()
         suffix = ".exe" if sys.platform == "win32" else ""
-        executable = str(Path(configured).expanduser()) if configured else shutil.which(name)
+        # A complete distribution must not accidentally use an older program
+        # from Homebrew/PATH. Explicit user overrides still take precedence.
+        bundled = next((str(p / (name + suffix)) for p in bundled_tool_dirs()
+                        if (p / (name + suffix)).is_file()), "")
+        executable = str(Path(configured).expanduser()) if configured else bundled or shutil.which(name)
         if not executable:
             executable = next((str(p / (name + suffix)) for p in directories if (p / (name + suffix)).is_file()), "")
         tool = Tool(name=name, path=executable or "")

@@ -1,4 +1,4 @@
-name: Build macOS test installer
+name: Build complete macOS installer
 on:
   push:
     branches: ["mkv-profile-converter-macos-test"]
@@ -8,41 +8,67 @@ permissions:
 jobs:
   macos:
     runs-on: macos-15
-    timeout-minutes: 25
+    timeout-minutes: 35
     defaults:
       run:
         working-directory: desktop
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        id: python
         with:
           python-version: '3.12'
           architecture: arm64
-      - name: Confirm native Apple Silicon runtime
-        run: python -c "import platform; assert platform.machine() == 'arm64'; print(platform.platform())"
+      - name: Install native media tools on build machine
+        run: brew install dovi_tool mkvtoolnix ffmpeg media-info
       - name: Install build dependencies
         run: python -m pip install -r requirements.txt -e ".[dev]"
       - name: Unit and GUI tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest -m "not integration" -q --junitxml=macos-test-results.xml
-      - name: Build app and portable archive
-        run: python scripts/build.py --archive
-      - name: Build Installer package
+        run: python -m pytest -m "not integration" -q --junitxml=macos-unit-results.xml
+      - name: Generate synthetic media fixtures
+        run: python scripts/make_test_fixture.py
+      - name: Build app with every media dependency
+        run: python scripts/build.py --bundle-media --archive
+      - name: Build single Installer package
         run: python scripts/build_installer.py
-      - name: Install package on runner
+      - name: Hide Homebrew to simulate a clean Mac
+        run: sudo mv /opt/homebrew /opt/homebrew-ci-hidden
+      - name: Install and automatically launch
         run: sudo installer -pkg dist/MKV-Profile-Converter-macOS-arm64-Installer.pkg -target /
-      - name: Check installed app and native startup
-        run: python scripts/check_macos_bundle.py /Applications/MKVProfileConverter.app
+      - name: Check installed app, first launch, and bundled streaming conversion
+        run: python scripts/check_macos_bundle.py /Applications/MKVProfileConverter.app --fixture ".testdata/Sample MEL.mkv"
+      - name: Full media integration checks using only bundled tools
+        env:
+          QT_QPA_PLATFORM: offscreen
+          DOVI_TEST_FIXTURE: ${{ github.workspace }}/desktop/.testdata/Sample MEL.mkv
+          DOVI_TEST_FEL_FIXTURE: ${{ github.workspace }}/desktop/.testdata/Sample FEL.mkv
+          TEST_PYTHON: ${{ steps.python.outputs.python-path }}
+        run: |
+          export PATH="/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools:/usr/bin:/bin:/usr/sbin:/sbin"
+          "$TEST_PYTHON" -m pytest -m integration -q --junitxml=macos-integration-results.xml
+      - name: Restore build machine Homebrew
+        if: always()
+        run: |
+          if [ -d /opt/homebrew-ci-hidden ]; then
+            sudo mv /opt/homebrew-ci-hidden /opt/homebrew
+          fi
       - name: Record checksums
         run: shasum -a 256 dist/MKV-Profile-Converter-*.zip dist/MKV-Profile-Converter-*.pkg > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: MKV-Profile-Converter-macOS-arm64
           path: |
             desktop/dist/MKV-Profile-Converter-*.zip
             desktop/dist/MKV-Profile-Converter-*.pkg
             desktop/dist/SHA256SUMS.txt
-            desktop/macos-test-results.xml
+            desktop/dist/installed-app-check.*
+            desktop/macos-*-results.xml
+            desktop/build/media-tool-notices/
           if-no-files-found: error
           retention-days: 30

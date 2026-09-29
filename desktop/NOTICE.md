@@ -16,10 +16,13 @@ External projects retain their respective licenses:
 - [MediaInfo](https://mediaarea.net/): BSD-style license.
 - [PySide6 / Qt for Python](https://doc.qt.io/qtforpython-6/): LGPLv3/GPLv3/commercial, depending on component.
 
-Third-party media executables are not bundled. Native builds include the Qt
-runtime installed from PySide6-Essentials; retain its license files when
-redistributing. This source package includes everything needed to modify and
-rebuild MKV Profile Converter.
+The macOS complete installer bundles all six media executables and their
+non-system dynamic libraries. Exact component versions, license notices,
+Homebrew build recipes/receipts and upstream source archive URLs/checksums
+are included under `licenses/media-tools` in the app. Other builds may use
+externally installed media tools. Native builds also include the Qt runtime
+installed from PySide6-Essentials; retain all third-party license files and
+corresponding source access when redistributing.
 
 Dolby and Dolby Vision are trademarks of Dolby Laboratories Licensing
 Corporation. This independent project is not affiliated with, sponsored by,

@@ -1,6 +1,7 @@
 """Build a native installer on Windows or macOS after scripts/build.py."""
 import os
 import platform
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -29,8 +30,25 @@ def main():
         app = ROOT / 'dist/MKVProfileConverter.app'
         if not app.is_dir():
             raise SystemExit('Build the macOS app first: python3 scripts/build.py --archive')
+        tools = app / 'Contents/Frameworks/media-tools'
+        for name in ('dovi_tool', 'mkvmerge', 'mkvextract', 'ffmpeg', 'ffprobe', 'mediainfo'):
+            if not (tools / name).is_file():
+                raise SystemExit('The Mac installer requires all media tools. Build with scripts/build.py --bundle-media --archive')
+        stage = ROOT / 'build/installer-root'
+        if stage.exists():
+            shutil.rmtree(stage)
+        stage.mkdir(parents=True)
+        shutil.copytree(app, stage / app.name, symlinks=True)
+        components = ROOT / 'build/installer-components.plist'
+        subprocess.run(['pkgbuild', '--analyze', '--root', str(stage), '--component-plist', str(components)], check=True)
+        definitions = plistlib.loads(components.read_bytes())
+        for definition in definitions:
+            definition['BundleIsRelocatable'] = False
+            definition['BundleOverwriteAction'] = 'upgrade'
+        components.write_bytes(plistlib.dumps(definitions))
         output = ROOT / 'dist' / f'MKV-Profile-Converter-macOS-{platform.machine()}-Installer.pkg'
-        subprocess.run(['pkgbuild', '--component', str(app), '--install-location', '/Applications',
+        subprocess.run(['pkgbuild', '--root', str(stage), '--component-plist', str(components),
+                        '--scripts', str(ROOT / 'packaging/macos-scripts'), '--install-location', '/Applications',
                         '--identifier', 'org.mkv-profile-converter.desktop', '--version', __version__, str(output)], check=True)
         print(output)
     else:

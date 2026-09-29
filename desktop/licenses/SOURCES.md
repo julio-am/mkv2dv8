@@ -24,3 +24,8 @@ Third-party components retain their original licenses; refer to the matching
 Qt source distribution for per-component notices. When making modified runtime
 builds or distributing a different platform bundle, include its corresponding
 notices and source access alongside the application source.
+
+The complete macOS distribution additionally contains `media-tools/sources.json`,
+exact Homebrew formula metadata, build recipes/receipts, and installed component
+licenses for its native media executables and library dependencies. The source
+URLs and checksums identify the upstream sources used by those formulas.

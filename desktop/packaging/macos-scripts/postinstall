@@ -1,0 +1,20 @@
+#!/bin/bash
+# Installer runs as root. Open the application as the interactive console user.
+# There are no network downloads or package-manager commands at install time.
+set -eu
+if [[ "${3:-/}" != "/" ]]; then
+    exit 0
+fi
+app_path='/Applications/MKVProfileConverter.app'
+console_user=$(/usr/bin/stat -f '%Su' /dev/console)
+case "$console_user" in
+    root|loginwindow|_mbsetupuser|'') exit 0 ;;
+esac
+console_uid=$(/usr/bin/id -u "$console_user")
+if /bin/launchctl asuser "$console_uid" /usr/bin/sudo -u "$console_user" /usr/bin/open "$app_path"; then
+    echo 'MKV Profile Converter launched for the logged-in user.'
+else
+    # Installation is complete even if the user has no available GUI session.
+    echo 'Installed. Open MKV Profile Converter from Applications.'
+fi
+exit 0

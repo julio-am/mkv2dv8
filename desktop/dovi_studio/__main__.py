@@ -2,6 +2,9 @@ import sys
 
 
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == "--verify-installation":
+        from .diagnostics import verify_installation
+        return verify_installation(sys.argv[2], sys.argv[3])
     from PySide6.QtWidgets import QApplication
     from .ui import MainWindow
     app = QApplication(sys.argv)

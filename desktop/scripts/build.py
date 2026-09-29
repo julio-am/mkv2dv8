@@ -2,6 +2,7 @@
 import argparse
 import os
 import platform
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,7 @@ root = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", action="store_true", help="Also create a platform-named distribution archive")
+    parser.add_argument("--bundle-media", action="store_true", help="macOS: include all six native media tools and their libraries")
     args = parser.parse_args()
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onedir",
                "--name", "MKVProfileConverter", "--paths", str(root),
@@ -21,12 +23,32 @@ def main():
                "--add-data", f"{root / 'licenses'}{os.pathsep}licenses"]
     if sys.platform == "darwin":
         command += ["--osx-bundle-identifier", "org.mkv-profile-converter.desktop"]
+    if args.bundle_media:
+        if sys.platform != "darwin":
+            parser.error("--bundle-media currently supports native macOS builds")
+        from collect_macos_tools import collect
+        binaries, notices = collect(root)
+        for binary in binaries:
+            command += ["--add-binary", f"{binary}{os.pathsep}media-tools"]
+        command += ["--add-data", f"{notices}{os.pathsep}licenses/media-tools"]
     command += [str(root / "run.py")]
     subprocess.run(command, cwd=root, check=True)
     target = root / "dist" / ("MKVProfileConverter.app" if sys.platform == "darwin" else "MKVProfileConverter")
+    if sys.platform == "darwin":
+        sys.path.insert(0, str(root))
+        from dovi_studio import __version__
+        info = target / "Contents/Info.plist"
+        metadata = plistlib.loads(info.read_bytes())
+        metadata.update(CFBundleName="MKV Profile Converter", CFBundleDisplayName="MKV Profile Converter",
+                        CFBundleVersion=__version__, CFBundleShortVersionString=__version__)
+        if args.bundle_media:
+            metadata["LSMinimumSystemVersion"] = "15.0"
+        info.write_bytes(plistlib.dumps(metadata))
+        subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(target)], check=True)
     print(f"Built: {target}")
     if args.archive:
-        name = f"MKV-Profile-Converter-{platform.system()}-{platform.machine()}"
+        system = "macOS" if sys.platform == "darwin" else platform.system()
+        name = f"MKV-Profile-Converter-{system}-{platform.machine()}"
         if sys.platform == "darwin":
             archive = root / "dist" / f"{name}.zip"
             subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(target), str(archive)], check=True)

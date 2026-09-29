@@ -8,7 +8,18 @@ This is an independent project, not affiliated with, sponsored by, or endorsed b
 
 ![MKV Profile Converter](docs/screenshot.png)
 
-## Start here
+## Install on Apple Silicon macOS
+
+Use the **0.3.0 or newer macOS Installer PKG**. It installs the app, Python, Qt,
+dovi_tool, MKVToolNix, FFmpeg/FFprobe and MediaInfo together, then launches the
+app for the logged-in user. No Homebrew, Terminal commands, dependency downloads
+or second setup wizard are required. The bundled tools are private to the app;
+existing system tools are left in place. Requires macOS 15 or newer.
+
+The test installer is not Developer ID signed or notarized. If macOS blocks it,
+use System Settings → Privacy & Security → Open Anyway after trying to open it.
+
+## Run from source
 
 1. Download the source ZIP from GitHub (**Code → Download ZIP**) and extract it into a writable folder, or clone the repository.
 2. Install **Python 3.10 or newer** if it is not already installed.
@@ -22,19 +33,19 @@ This is an independent project, not affiliated with, sponsored by, or endorsed b
 
 The first launch downloads Qt into a private `.venv` inside the extracted project. Subsequent launches reuse it. If macOS does not allow opening the command file, use the Terminal alternative from the project folder. Linux distributions may require their `python3-venv` package. The source folder must remain in place.
 
-You can also run a native distribution built with `scripts/build.py`; those distributions include Python and Qt and do not use the launchers. Media tools are installed separately in either case.
+You can also run a native distribution built with `scripts/build.py`; those distributions include Python and Qt and do not use the launchers. Source and non-bundled distributions require separate media tools; the complete macOS installer includes them.
 
 ## Installable builds
 
 The build workflow includes a Windows setup EXE and a macOS Installer PKG, in addition to portable archives. They include Python and Qt. Windows setup offers a destination, Start-menu shortcut, optional desktop shortcut, and uninstaller; it installs for the current user. The macOS package uses Apple's Installer to place the app in `/Applications`. Linux uses the portable TAR.GZ.
 
-Linux and Apple Silicon macOS distributions have been built. The macOS 0.2.0 test build passed 33 unit/GUI tests, package installation, and native Cocoa startup on macOS 15.7.9. Windows and Intel macOS builds have not been executed. Installers have no Developer ID signature or notarization; the macOS app has PyInstaller's ad-hoc signature. Media executables are installed separately through their official projects; the in-app setup wizard locates and validates them.
+Linux and Apple Silicon macOS distributions have been built. The macOS 0.2.0 test build passed 33 unit/GUI tests, package installation, and native Cocoa startup on macOS 15.7.9. Windows and Intel macOS builds have not been executed. Installers have no Developer ID signature or notarization; the macOS app has PyInstaller's ad-hoc signature. The complete macOS installer includes all media executables. Source and other-platform distributions can use the in-app setup wizard to locate external tools.
 
 ![Media tools setup](docs/setup-wizard.png)
 
 ## Set up media tools
 
-Open **Tools → Media Tools Setup**. Setup also opens automatically at startup when required tools are missing. The app checks actual executable versions and lets you browse to each program. Use executables appropriate for the CPU and OS; the app reports execution errors and unsupported versions.
+The complete macOS installer is ready to convert on first launch. For source or other builds, open **Tools → Media Tools Setup**. Setup opens automatically only when required tools are missing. The app checks actual executable versions and lets you browse to each program. Use executables appropriate for the CPU and OS; the app reports execution errors and unsupported versions.
 
 | Tool | Required | Minimum | Role |
 |---|---|---|---|
@@ -147,7 +158,7 @@ python scripts/build_installer.py
 
 Windows installer builds additionally require [Inno Setup 6](https://jrsoftware.org/isinfo.php); macOS uses `pkgbuild`. The CI workflow installs Inno Setup automatically.
 
-Distribute the complete directory/bundle. Media tools are external and can be placed in a `tools` folder next to the executable, or selected in Media Tools Setup. Packaged subprocesses restore the system library-search environment, preventing bundled Qt libraries from overriding those needed by installed media tools.
+Distribute the complete directory/bundle. For the macOS installer, install the build-machine media tools with Homebrew and use `python scripts/build.py --bundle-media --archive` before `python scripts/build_installer.py`. PyInstaller collects and relocates their non-system libraries. Other builds can use external tools selected in Media Tools Setup. Packaged subprocesses restore the system library-search environment, preventing bundled Qt libraries from overriding those needed by installed media tools.
 
 `.github/workflows/build.yml` runs unit/GUI tests, native app builds for Linux/macOS/Windows, and installer builds for Windows/macOS on pushes to `main`, version tags, pull requests, and manual runs. Completed runs provide downloadable build artifacts in the repository's **Actions** tab without publishing a release. Public distribution should add your own Apple signing/notarization and Windows signing; no signing credentials are included.
 

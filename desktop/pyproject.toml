@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mkv-profile-converter"
-version = "0.2.0"
+version = "0.3.0"
 description = "Native cross-platform Dolby Vision Profile 7 to 8.1 MKV conversion"
 requires-python = ">=3.10"
 dependencies = ["PySide6-Essentials>=6.8,<7"]

@@ -167,6 +167,28 @@ def test_optional_tool_fallbacks():
         require(tools, 'stream')
 
 
+@pytest.mark.skipif(os.name == 'nt', reason='POSIX executable fixture')
+def test_bundled_tools_win_over_path_and_explicit_overrides_still_work(tmp_path, monkeypatch):
+    from dovi_studio import dependencies
+    bundle, external = tmp_path / 'bundle/media-tools', tmp_path / 'external'
+    bundle.mkdir(parents=True)
+    external.mkdir()
+    for directory, version in ((bundle, '999.0'), (external, '998.0')):
+        for name in SPECS:
+            executable = directory / name
+            executable.write_text(f'#!/bin/sh\necho "version {version}"\n')
+            executable.chmod(0o755)
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(sys, '_MEIPASS', str(bundle.parent), raising=False)
+    monkeypatch.setenv('PATH', str(external))
+    tools = discover()
+    require(tools, 'stream')
+    assert all(tool.ok and Path(tool.path).parent == bundle for tool in tools.values())
+    override = discover({'dovi_tool': str(external / 'dovi_tool')})
+    assert override['dovi_tool'].version == '998.0.0'
+    assert Path(override['mkvmerge'].path).parent == bundle
+
+
 def test_frozen_bundle_does_not_leak_its_library_paths(monkeypatch):
     monkeypatch.setattr(sys, 'frozen', True, raising=False)
     monkeypatch.setattr(sys, '_MEIPASS', '/app/bundle', raising=False)
