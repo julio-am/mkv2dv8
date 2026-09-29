@@ -28,7 +28,7 @@ You can also run a native distribution built with `scripts/build.py`; those dist
 
 The build workflow includes a Windows setup EXE and a macOS Installer PKG, in addition to portable archives. They include Python and Qt. Windows setup offers a destination, Start-menu shortcut, optional desktop shortcut, and uninstaller; it installs for the current user. The macOS package uses Apple's Installer to place the app in `/Applications`. Linux uses the portable TAR.GZ.
 
-These installer recipes must be built and tested on their target operating systems. Only the Linux build has been executed in the current validation environment. Installers are unsigned until a distributor supplies signing credentials. Media executables are installed separately through their official projects; the in-app setup wizard locates and validates them.
+Linux and Apple Silicon macOS distributions have been built. The macOS 0.2.0 test build passed 33 unit/GUI tests, package installation, and native Cocoa startup on macOS 15.7.9. Windows and Intel macOS builds have not been executed. Installers have no Developer ID signature or notarization; the macOS app has PyInstaller's ad-hoc signature. Media executables are installed separately through their official projects; the in-app setup wizard locates and validates them.
 
 ![Media tools setup](docs/setup-wizard.png)
 
@@ -165,6 +165,6 @@ python -m pytest -q
 
 For Windows PowerShell set `$env:DOVI_TEST_FIXTURE` and `$env:DOVI_TEST_FEL_FIXTURE` to the corresponding absolute fixture paths. Tests write outputs in temporary folders.
 
-See [VALIDATION.md](docs/VALIDATION.md) for what was actually executed. macOS/Windows runners and signed installers were not available in the creation environment; the build workflow is supplied but has not been executed there. Test footage is small synthetic material and is not a substitute for verifying a representative full-length title on your own player before doing a large batch.
+See [VALIDATION.md](docs/VALIDATION.md) for what was actually executed. The Apple Silicon macOS test build is available from [this successful GitHub Actions run](https://github.com/julio-am/mkv2dv8/actions/runs/36641162951). Windows, Intel macOS, and signed/notarized installer validation remain outstanding. Test footage is small synthetic material and is not a substitute for verifying a representative full-length title on your own player before doing a large batch.
 
 See [FEATURES.md](docs/FEATURES.md) for the scope relative to dovi_convert, and [NOTICE.md](NOTICE.md) for licenses and upstream credits.

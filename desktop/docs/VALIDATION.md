@@ -75,3 +75,26 @@ Windows Inno Setup and macOS pkgbuild installer recipes are included and wired
 into CI. They were not compiled or run on those operating systems here. The
 Linux app remains a portable TAR.GZ. Media Tools Setup discovers existing
 programs and opens official download pages; it does not silently install them.
+
+## Apple Silicon macOS test build (0.2.0)
+
+[Build 36641162951](https://github.com/julio-am/mkv2dv8/actions/runs/36641162951)
+ran on a native arm64 macOS 15.7.9 runner, using Python 3.12.10, Qt/PySide6
+6.11.2, and PyInstaller 6.22.3. It built the app ZIP and Installer PKG from
+commit `0ff7a6667f7fa04562b6844e36a5afcf72571ea9`.
+
+- 33 unit and GUI tests passed; 12 media integration tests were deselected.
+- Apple's Installer successfully installed the PKG into `/Applications`.
+- The installed executable passed its arm64 architecture check and the app's
+  ad-hoc code signature verified, including nested code.
+- The installed app stayed running for eight seconds using native Cocoa,
+  with no Python traceback. This is a startup smoke check, not a complete
+  interactive conversion or playback test on macOS.
+- Downloaded archive and installer SHA-256 hashes matched the runner outputs.
+
+The app uses ad-hoc signing only. The Installer PKG is unsigned, and neither
+artifact has been notarized. Media tools are external dependencies. The app ZIP
+is also available under a `macOS-arm64.zip` filename; renaming it from the
+runner's `Darwin-arm64.zip` did not alter its bytes. The machine-readable test
+result is in `macos-test-results.xml`. Earlier references to unavailable macOS
+execution describe the original Linux-only validation phase.
