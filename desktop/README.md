@@ -39,7 +39,7 @@ You can also run a native distribution built with `scripts/build.py`; those dist
 
 The build workflow includes a Windows setup EXE and a macOS Installer PKG, in addition to portable archives. They include Python and Qt. Windows setup offers a destination, Start-menu shortcut, optional desktop shortcut, and uninstaller; it installs for the current user. The macOS package uses Apple's Installer to place the app in `/Applications`. Linux uses the portable TAR.GZ.
 
-Linux and Apple Silicon macOS distributions have been built. The macOS 0.2.0 test build passed 33 unit/GUI tests, package installation, and native Cocoa startup on macOS 15.7.9. Windows and Intel macOS builds have not been executed. Installers have no Developer ID signature or notarization; the macOS app has PyInstaller's ad-hoc signature. The complete macOS installer includes all media executables. Source and other-platform distributions can use the in-app setup wizard to locate external tools.
+Linux and Apple Silicon macOS distributions have been built. The complete macOS 0.3.0 test build passed 34 unit/GUI tests, 12 media integration tests, package installation, automatic launch, and a streaming conversion through the installed native GUI, with Homebrew unavailable. Windows and Intel macOS builds have not been executed. Installers have no Developer ID signature or notarization; the macOS app has PyInstaller's ad-hoc signature. The complete macOS installer includes all media executables. Source and other-platform distributions can use the in-app setup wizard to locate external tools.
 
 ![Media tools setup](docs/setup-wizard.png)
 
@@ -148,7 +148,11 @@ Build on **each target OS and CPU architecture**. PyInstaller does not cross-com
 ```bash
 python -m pip install -r requirements.txt -e ".[dev]"
 python scripts/build.py --archive
-# Windows or macOS, after the app build:
+# Windows, after the app build:
+python scripts/build_installer.py
+# macOS complete installer (Homebrew is needed only on the build machine):
+brew install mkvtoolnix ffmpeg media-info
+python scripts/build.py --bundle-media --archive
 python scripts/build_installer.py
 ```
 
@@ -158,7 +162,7 @@ python scripts/build_installer.py
 
 Windows installer builds additionally require [Inno Setup 6](https://jrsoftware.org/isinfo.php); macOS uses `pkgbuild`. The CI workflow installs Inno Setup automatically.
 
-Distribute the complete directory/bundle. For the macOS installer, install the build-machine media tools with Homebrew and use `python scripts/build.py --bundle-media --archive` before `python scripts/build_installer.py`. PyInstaller collects and relocates their non-system libraries. Other builds can use external tools selected in Media Tools Setup. Packaged subprocesses restore the system library-search environment, preventing bundled Qt libraries from overriding those needed by installed media tools.
+Distribute the complete directory/bundle. For the macOS installer, install the build-machine media tools with Homebrew and use `python scripts/build.py --bundle-media --archive` before `python scripts/build_installer.py`. The build collects and relocates their non-system libraries into a separate directory so the media tools and GUI can use their own Qt libraries. The official dovi_tool 2.3.4 binary is checksum-pinned; build-time checks reject unsupported tool versions. Other builds can use external tools selected in Media Tools Setup. Packaged subprocesses restore the system library-search environment, preventing bundled Qt libraries from overriding those needed by installed media tools.
 
 `.github/workflows/build.yml` runs unit/GUI tests, native app builds for Linux/macOS/Windows, and installer builds for Windows/macOS on pushes to `main`, version tags, pull requests, and manual runs. Completed runs provide downloadable build artifacts in the repository's **Actions** tab without publishing a release. Public distribution should add your own Apple signing/notarization and Windows signing; no signing credentials are included.
 
@@ -176,6 +180,6 @@ python -m pytest -q
 
 For Windows PowerShell set `$env:DOVI_TEST_FIXTURE` and `$env:DOVI_TEST_FEL_FIXTURE` to the corresponding absolute fixture paths. Tests write outputs in temporary folders.
 
-See [VALIDATION.md](docs/VALIDATION.md) for what was actually executed. The Apple Silicon macOS test build is available from [this successful GitHub Actions run](https://github.com/julio-am/mkv2dv8/actions/runs/36641162951). Windows, Intel macOS, and signed/notarized installer validation remain outstanding. Test footage is small synthetic material and is not a substitute for verifying a representative full-length title on your own player before doing a large batch.
+See [VALIDATION.md](docs/VALIDATION.md) for what was actually executed. The Apple Silicon macOS test build is available from [this successful GitHub Actions run](https://github.com/julio-am/mkv2dv8/actions/runs/36644951012). Windows, Intel macOS, and signed/notarized installer validation remain outstanding. Test footage is small synthetic material and is not a substitute for verifying a representative full-length title on your own player before doing a large batch.
 
 See [FEATURES.md](docs/FEATURES.md) for the scope relative to dovi_convert, and [NOTICE.md](NOTICE.md) for licenses and upstream credits.

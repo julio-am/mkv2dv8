@@ -1,0 +1,36 @@
+{
+  "version": "0.3.0",
+  "ok": true,
+  "tools": {
+    "dovi_tool": {
+      "version": "2.3.4",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool"
+    },
+    "mkvmerge": {
+      "version": "101.0.0",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvmerge"
+    },
+    "mkvextract": {
+      "version": "101.0.0",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvextract"
+    },
+    "ffmpeg": {
+      "version": "9.0.1",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg"
+    },
+    "ffprobe": {
+      "version": "9.0.1",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffprobe"
+    },
+    "mediainfo": {
+      "version": "26.5.0",
+      "path": "/Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mediainfo"
+    }
+  },
+  "setup_wizard_shown": false,
+  "conversion": "Profile 7 -> Profile 8.1",
+  "method": "stream",
+  "strict_verification": true,
+  "log": "$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvmerge -J \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffprobe -v error -select_streams v:0 -show_streams -of json \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mediainfo --Output=JSON \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvmerge -J \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffprobe -v error -select_streams v:0 -show_streams -of json \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mediainfo --Output=JSON \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\nInspecting all Dolby Vision metadata\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool extract-rpu \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" -o /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/dovi-studio-k0kk90as/source.rpu\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool info -i /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/dovi-studio-k0kk90as/source.rpu --summary\nPreserving video timestamps\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvextract \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" timestamps_v2 0:/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/timestamps.txt\nConverting Dolby Vision metadata\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg -hide_banner -loglevel error -nostdin -i \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" -map 0:v:0 -c:v copy -an -sn -dn -bsf:v hevc_mp4toannexb -f hevc -\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool -m 2 convert --discard - -o /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/converted.hevc\nRemuxing all audio, subtitles, chapters and attachments\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvextract \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" tags /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/source-tags.xml\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvmerge --ui-language en_US -o /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv --title \"Synthetic preservation test\" --track-order 0:0,1:1,1:2,1:3 --timestamps 0:/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/timestamps.txt --language 0:en --track-name \"0:Original video\" --default-duration 0:41708333ns --default-track-flag 0:1 --forced-display-flag 0:0 --track-enabled-flag 0:1 --display-dimensions 0:256x144 /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/converted.hevc --no-video \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\"\nVerifying profile, tracks and timestamps\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvmerge -J /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffprobe -v error -select_streams v:0 -show_streams -of json /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mediainfo --Output=JSON /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/mkvextract /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv timestamps_v2 0:/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/output-timestamps.txt\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool extract-rpu /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv -o /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/verified-output.rpu\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/dovi_tool info -i /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/dovi-studio-f4igbals/verified-output.rpu -s\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg -hide_banner -v error -nostdin -i \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" -map 0:a -c copy -f streamhash -hash sha256 -\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg -hide_banner -v error -nostdin -i /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv -map 0:a -c copy -f streamhash -hash sha256 -\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg -hide_banner -v error -nostdin -i \"/Users/runner/work/mkv2dv8/mkv2dv8/desktop/.testdata/Sample MEL.mkv\" -map 0:s -c copy -f streamhash -hash sha256 -\n$ /Applications/MKVProfileConverter.app/Contents/Frameworks/media-tools/ffmpeg -hide_banner -v error -nostdin -i /private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/.dovi-studio-ho5njq3j/output.mkv -map 0:s -c copy -f streamhash -hash sha256 -\nSample MEL.mkv: Done\n/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/mkv-install-check-q46op6j0/output/Sample MEL.p81.mkv",
+  "installer_auto_launched": true
+}

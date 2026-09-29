@@ -98,3 +98,36 @@ is also available under a `macOS-arm64.zip` filename; renaming it from the
 runner's `Darwin-arm64.zip` did not alter its bytes. The machine-readable test
 result is in `macos-test-results.xml`. Earlier references to unavailable macOS
 execution describe the original Linux-only validation phase.
+
+## Complete Apple Silicon installer (0.3.0)
+
+[Build 36644951012](https://github.com/julio-am/mkv2dv8/actions/runs/36644951012)
+passed on native Apple Silicon macOS 15, from commit
+`62be4273e7d667cf68dcd4cf40c25bafc4a0d052`.
+
+- All **46 tests passed**: 34 unit/GUI tests and 12 real-media integration tests.
+- The package installs Python, Qt and all six media tools inside the app.
+- Homebrew was moved out of its normal location before installation and
+  runtime checks. The installed app automatically launched as the console
+  user, not root, and opened without the dependency setup wizard.
+- An additional check drove the installed native Cocoa GUI through a real
+  Profile 7 MEL to Profile 8.1 streaming conversion with strict verification.
+  Every discovered media tool resolved inside the installed app bundle.
+- The 12 integration tests ran using only the bundled media executables.
+  They cover conversion, audio/subtitle preservation, backup/restore,
+  metadata fallbacks, FEL policy, cancellation and failure handling.
+- The installed bundle passed arm64 architecture and deep code-signature
+  verification. Its Mach-O dependencies were checked for unresolved
+  references to build-machine libraries.
+- Downloaded installer and app ZIP checksums matched the build output.
+
+Bundled media versions: dovi_tool 2.3.4, MKVToolNix 101.0, FFmpeg/FFprobe
+9.0.1, and MediaInfo 26.05. Media tools and GUI libraries are relocated in
+separate directories to avoid loading incompatible QtCore versions.
+
+Evidence: `macos-complete-unit-results.xml`,
+`macos-complete-integration-results.xml`, and `macos-installed-app-check.json`.
+The package requires Apple Silicon and macOS 15 or newer. It remains an
+unsigned, unnotarized test installer with an ad-hoc-signed application.
+Tests use small synthetic fixtures; a representative full-length title and
+playback on the user's device still need user acceptance testing.
