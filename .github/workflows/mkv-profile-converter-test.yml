@@ -24,15 +24,17 @@ jobs:
           python-version: '3.12'
           architecture: arm64
       - name: Install native media tools on build machine
-        run: brew install dovi_tool mkvtoolnix ffmpeg media-info
+        run: brew install mkvtoolnix ffmpeg media-info
       - name: Install build dependencies
         run: python -m pip install -r requirements.txt -e ".[dev]"
       - name: Unit and GUI tests
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -m pytest -m "not integration" -q --junitxml=macos-unit-results.xml
+      - name: Fetch pinned official dovi_tool
+        run: python scripts/fetch_dovi_tool.py
       - name: Generate synthetic media fixtures
-        run: python scripts/make_test_fixture.py
+        run: PATH="$PWD/build/media-vendor:$PATH" python scripts/make_test_fixture.py
       - name: Build app with every media dependency
         run: python scripts/build.py --bundle-media --archive
       - name: Build single Installer package
