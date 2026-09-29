@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkv-profile-converter"
+version = "0.2.0"
+description = "Native cross-platform Dolby Vision Profile 7 to 8.1 MKV conversion"
+requires-python = ">=3.10"
+dependencies = ["PySide6-Essentials>=6.8,<7"]
+license = {text = "GPL-3.0-or-later"}
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pyinstaller>=6.12"]
+
+[project.gui-scripts]
+mkv-profile-converter = "dovi_studio.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["dovi_studio*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires real media tools and explicit fixture paths"]
