@@ -40,7 +40,7 @@ def main():
         stage.mkdir(parents=True)
         shutil.copytree(app, stage / app.name, symlinks=True)
         components = ROOT / 'build/installer-components.plist'
-        subprocess.run(['pkgbuild', '--analyze', '--root', str(stage), '--component-plist', str(components)], check=True)
+        subprocess.run(['pkgbuild', '--analyze', '--root', str(stage), str(components)], check=True)
         definitions = plistlib.loads(components.read_bytes())
         for definition in definitions:
             definition['BundleIsRelocatable'] = False
