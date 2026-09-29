@@ -38,13 +38,19 @@ def main():
         if running:
             break
         time.sleep(.25)
+    auto_launched = bool(running)
     if not running:
-        raise SystemExit("Installer did not launch the app for the console user.")
+        print("Launch diagnostics:", flush=True)
+        subprocess.run(["/usr/bin/stat", "-f", "console user: %Su (%u)", "/dev/console"])
+        processes = subprocess.check_output(["/bin/ps", "-axww", "-o", "pid=,uid=,comm="], text=True)
+        print("\n".join(line for line in processes.splitlines() if "MKVProfileConverter" in line), flush=True)
+        subprocess.run(["/usr/bin/tail", "-n", "65", "/var/log/install.log"])
     for pid in running:
         owner = subprocess.check_output(["/bin/ps", "-o", "uid=", "-p", pid], text=True).strip()
         assert owner != "0", "Installer must never launch the app as root"
         os.kill(int(pid), signal.SIGTERM)
-    print("Installer automatically launched the app as the console user.")
+    if auto_launched:
+        print("Installer automatically launched the app as the console user.")
     # Reject unresolved absolute build-machine references, including in nested
     # libraries that a --version-only check might not exercise.
     for binary in (args.app / "Contents/Frameworks").rglob("*"):
@@ -90,8 +96,12 @@ def main():
     if "Traceback (most recent call last)" in output:
         raise SystemExit("Python reported an error during installed-app startup.")
     report = json.loads(args.report.read_text())
+    report["installer_auto_launched"] = auto_launched
+    args.report.write_text(json.dumps(report, indent=2) + "\n")
     assert report["ok"] and not report["setup_wizard_shown"], report
     print("Installed GUI opened without setup and completed P7 -> P8.1 streaming conversion using bundled tools.")
+    if not auto_launched:
+        raise SystemExit("Installer did not launch the app for the console user.")
 
 
 if __name__ == "__main__":
