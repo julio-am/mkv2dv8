@@ -93,6 +93,12 @@ def main():
             output = log.read().decode("utf-8", errors="replace")
             if output:
                 print(output)
+            if process.returncode != 0:
+                crashes = sorted((Path.home() / "Library/Logs/DiagnosticReports").glob("MKVProfileConverter*.ips"))
+                for crash in crashes[-2:]:
+                    details = crash.read_text(errors="replace")
+                    args.report.with_name("installed-app-crash-" + crash.name).write_text(details)
+                    print(details[:16000], flush=True)
     if "Traceback (most recent call last)" in output:
         raise SystemExit("Python reported an error during installed-app startup.")
     report = json.loads(args.report.read_text())

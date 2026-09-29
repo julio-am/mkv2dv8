@@ -28,13 +28,14 @@ def main():
             parser.error("--bundle-media currently supports native macOS builds")
         from collect_macos_tools import collect
         binaries, notices = collect(root)
-        for binary in binaries:
-            command += ["--add-binary", f"{binary}{os.pathsep}media-tools"]
         command += ["--add-data", f"{notices}{os.pathsep}licenses/media-tools"]
     command += [str(root / "run.py")]
     subprocess.run(command, cwd=root, check=True)
     target = root / "dist" / ("MKVProfileConverter.app" if sys.platform == "darwin" else "MKVProfileConverter")
     if sys.platform == "darwin":
+        if args.bundle_media:
+            from bundle_macos_tools import bundle
+            bundle(binaries, target / "Contents/Frameworks/media-tools")
         sys.path.insert(0, str(root))
         from dovi_studio import __version__
         info = target / "Contents/Info.plist"
